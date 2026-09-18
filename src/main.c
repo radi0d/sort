@@ -16,7 +16,7 @@ static comp_res_t comp_lines(const wchar_t *a, const wchar_t *b);
 int
 main(int argc, char *argv[])
 {
-	if (argc != 2) {
+	if (2 != argc) {
 		print_usage();
 		return 1;
 	}
