@@ -53,6 +53,7 @@ main(int argc, char *argv[])
 	}
 
 	list_free(l);
+	fclose(f);
 
 	return 0;
 }
