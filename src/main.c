@@ -40,6 +40,12 @@ main(int argc, char *argv[])
 		if (!fgetws(line, LINE_BUF, f))
 			break;
 
+		// empty line
+		if (1 == wcslen(line)) {
+			free(line);
+			continue;
+		}
+
 		if (list_append(l, line)) {
 			fprintf(stderr, "[ERR] Allocation error\n");
 			return 1;
