@@ -1,3 +1,6 @@
+#define ARENA_IMPLEMENTATION
+#include "arena.h"
+
 #include "list.h"
 #include "sort.h"
 
@@ -8,7 +11,7 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#define LINE_BUF 1024
+#include <sys/stat.h>
 
 void print_usage();
 static comp_res_t comp_lines(wstr_t a, wstr_t b);
@@ -29,36 +32,74 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
+	struct stat st = {};
+	if (fstat(fileno(f), &st)) {
+		fclose(f);
+		perror("stat()");
+		return 1;
+	}
+	const size_t fsize = (size_t) st.st_size;
+
+	arena_t *a = arena_new((fsize + 1) * sizeof(wchar_t));
+
 	list_t *l = list_new();
 	if (!l) {
-		fprintf(stderr, "[ERR] Allocation error\n");
+		arena_free(a);
+		fclose(f);
+		fwprintf(stderr, L"[ERR] Allocation error\n");
 		return 1;
 	}
 
 	while (true) {
-		wchar_t *line = (wchar_t *) calloc(LINE_BUF, sizeof(wchar_t));
-		if (!fgetws(line, LINE_BUF, f))
+		aptr_t p = arena_ptr(a);
+		const size_t taken = p / sizeof(wchar_t);
+
+		wchar_t *line = (wchar_t *) arena_alloc(a, (fsize - taken) *
+                                                           sizeof(wchar_t));
+		if (!line) {
+			list_free(l);
+			arena_free(a);
+			fclose(f);
+			fwprintf(stderr, L"[ERR] Allocation error\n");
+			return 1;
+		}
+
+		if (!fgetws(line, (int) (fsize - taken), f))
 			break;
 
+		const size_t len = wcslen(line);
+
 		// empty line
-		if (1 == wcslen(line)) {
-			free(line);
+		if (1 == len) {
+			arena_restore(a, p);
 			continue;
 		}
 
-		if (list_append(l, line, wcslen(line))) {
-			fprintf(stderr, "[ERR] Allocation error\n");
+		arena_restore(a, p);
+		if (!arena_alloc(a, len * sizeof(wchar_t))) {
+			list_free(l);
+			arena_free(a);
+			fclose(f);
+			fwprintf(stderr, L"[ERR] Allocation error\n");
+			return 1;
+		}
+
+		if (list_append(l, line, len)) {
+			list_free(l);
+			arena_free(a);
+			fclose(f);
+			fwprintf(stderr, L"[ERR] Allocation error\n");
 			return 1;
 		}
 	}
 
 	sort(l, comp_lines);
 
-	for (size_t i = 0; i < l->len; i++) {
-		wprintf(L"%ls", L(l)[i].str);
-	}
+	for (size_t i = 0; i < l->len; i++)
+		wprintf(L"%.*ls", L(l)[i].len, L(l)[i].str);
 
 	list_free(l);
+	arena_free(a);
 	fclose(f);
 
 	return 0;
