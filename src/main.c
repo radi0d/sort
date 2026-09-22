@@ -55,7 +55,7 @@ main(int argc, char *argv[])
 		const size_t taken = p / sizeof(wchar_t);
 
 		wchar_t *line = (wchar_t *) arena_alloc(a, (fsize - taken) *
-                                                           sizeof(wchar_t));
+		                                           sizeof(wchar_t));
 		if (!line) {
 			list_free(l);
 			arena_free(a);
@@ -126,22 +126,22 @@ comp_lines(wstr_t a, wstr_t b)
 	size_t ptr_a = 0, ptr_b = 0;
 	while (ptr_a < len_a && ptr_b < len_b) {
 		if (iswpunct((wint_t) as[ptr_a]) ||
-                    iswspace((wint_t) as[ptr_a])) {
+		    iswspace((wint_t) as[ptr_a])) {
 			ptr_a++;
 			continue;
 		}
 
 		if (iswpunct((wint_t) bs[ptr_b]) ||
-                    iswspace((wint_t) bs[ptr_b])) {
+		    iswspace((wint_t) bs[ptr_b])) {
 			ptr_b++;
 			continue;
 		}
 
 		if (towlower((wint_t) as[ptr_a]) <
-                    towlower((wint_t) bs[ptr_b]))
+		    towlower((wint_t) bs[ptr_b]))
 			return LESS_THAN;
 		if (towlower((wint_t) as[ptr_a]) >
-                    towlower((wint_t) bs[ptr_b]))
+		    towlower((wint_t) bs[ptr_b]))
 			return GREATER_THAN;
 
 		ptr_a++;
@@ -151,12 +151,12 @@ comp_lines(wstr_t a, wstr_t b)
 	if (ptr_a < len_a && ptr_b == len_b)
 		for (; ptr_a < len_a; ptr_a++)
 			if (!iswpunct((wint_t) as[ptr_a]) &&
-                            !iswspace((wint_t) as[ptr_a]))
+			    !iswspace((wint_t) as[ptr_a]))
 				return GREATER_THAN;
 	if (ptr_a == len_a && ptr_b < len_b)
 		for (; ptr_b < len_b; ptr_b++)
 			if (!iswpunct((wint_t) bs[ptr_b]) &&
-                            !iswspace((wint_t) bs[ptr_b]))
+			    !iswspace((wint_t) bs[ptr_b]))
 				return LESS_THAN;
 
 	return EQUAL;
