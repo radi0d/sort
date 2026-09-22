@@ -11,7 +11,7 @@ list_new(void)
 	if (!l)
 		return NULL;
 
-	l->buf = (wchar_t **) calloc(1, sizeof(wchar_t *));
+	l->buf = (wstr_t *) calloc(1, sizeof(wstr_t));
 	if (!l->buf) {
 		free(l);
 		return NULL;
@@ -28,19 +28,18 @@ list_free(list_t *l)
 {
 	assert(l);
 	assert(l->buf);
-
-	for (size_t i = 0; i < l->len; i++)
-		free(L(l)[i]);
+	assert(l->cap >= l->len);
 
 	free(l->buf);
 	free(l);
 }
 
 int
-list_append(list_t *l, wchar_t *line)
+list_append(list_t *l, wchar_t *line, size_t len)
 {
 	assert(l);
 	assert(l->buf);
+	assert(l->cap >= l->len);
 	assert(line);
 
 	size_t tcap = 1;
@@ -48,13 +47,15 @@ list_append(list_t *l, wchar_t *line)
 	while (tcap < tlen)
 		tcap *= 2;
 
-	wchar_t **tbuf = (wchar_t **) calloc(tcap, sizeof(wchar_t *));
+	wstr_t *tbuf = (wstr_t *) calloc(tcap, sizeof(wstr_t));
 	if (!tbuf)
 		return -1;
 
-	memcpy(tbuf, l->buf, l->len * sizeof(wchar_t *));
+	memcpy(tbuf, l->buf, l->len * sizeof(wstr_t));
 	free(l->buf);
-	tbuf[l->len] = line;
+
+	tbuf[l->len].str = line;
+	tbuf[l->len].len = len;
 
 	l->buf = tbuf;
 	l->cap = tcap;

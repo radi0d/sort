@@ -1,5 +1,7 @@
 #pragma once
 
+#include "list.h"
+
 #include <stddef.h>
 #include <wchar.h>
 
@@ -9,6 +11,6 @@ typedef enum comp_result {
 	GREATER_THAN,
 } comp_res_t;
 
-typedef comp_res_t (*comp_t)(const wchar_t *a, const wchar_t *b);
+typedef comp_res_t (*comp_t)(wstr_t a, wstr_t b);
 
-void sort(wchar_t **lines, size_t len, comp_t comp);
+void sort(list_t *l, comp_t comp);

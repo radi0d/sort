@@ -11,7 +11,7 @@
 #define LINE_BUF 1024
 
 void print_usage();
-static comp_res_t comp_lines(const wchar_t *a, const wchar_t *b);
+static comp_res_t comp_lines(wstr_t a, wstr_t b);
 
 int
 main(int argc, char *argv[])
@@ -46,16 +46,16 @@ main(int argc, char *argv[])
 			continue;
 		}
 
-		if (list_append(l, line)) {
+		if (list_append(l, line, wcslen(line))) {
 			fprintf(stderr, "[ERR] Allocation error\n");
 			return 1;
 		}
 	}
 
-	sort(L(l), l->len, comp_lines);
+	sort(l, comp_lines);
 
 	for (size_t i = 0; i < l->len; i++) {
-		wprintf(L"%ls", L(l)[i]);
+		wprintf(L"%ls", L(l)[i].str);
 	}
 
 	list_free(l);
@@ -71,29 +71,36 @@ print_usage()
 }
 
 static comp_res_t
-comp_lines(const wchar_t *a, const wchar_t *b)
+comp_lines(wstr_t a, wstr_t b)
 {
-	assert(a);
-	assert(b);
+	assert(a.str);
+	assert(b.str);
 
-	const size_t len_a = wcslen(a);
-	const size_t len_b = wcslen(b);
+	const size_t len_a = a.len;
+	const size_t len_b = b.len;
+
+	const wchar_t *as = a.str;
+	const wchar_t *bs = b.str;
 
 	size_t ptr_a = 0, ptr_b = 0;
 	while (ptr_a < len_a && ptr_b < len_b) {
-		if (iswpunct((wint_t) a[ptr_a]) || iswspace((wint_t) a[ptr_a])) {
+		if (iswpunct((wint_t) as[ptr_a]) ||
+                    iswspace((wint_t) as[ptr_a])) {
 			ptr_a++;
 			continue;
 		}
 
-		if (iswpunct((wint_t) b[ptr_b]) || iswspace((wint_t) b[ptr_b])) {
+		if (iswpunct((wint_t) bs[ptr_b]) ||
+                    iswspace((wint_t) bs[ptr_b])) {
 			ptr_b++;
 			continue;
 		}
 
-		if (towlower((wint_t) a[ptr_a]) < towlower((wint_t) b[ptr_b]))
+		if (towlower((wint_t) as[ptr_a]) <
+                    towlower((wint_t) bs[ptr_b]))
 			return LESS_THAN;
-		if (towlower((wint_t) a[ptr_a]) > towlower((wint_t) b[ptr_b]))
+		if (towlower((wint_t) as[ptr_a]) >
+                    towlower((wint_t) bs[ptr_b]))
 			return GREATER_THAN;
 
 		ptr_a++;
@@ -102,11 +109,13 @@ comp_lines(const wchar_t *a, const wchar_t *b)
 
 	if (ptr_a < len_a && ptr_b == len_b)
 		for (; ptr_a < len_a; ptr_a++)
-			if (!iswpunct((wint_t) a[ptr_a]) && !iswspace((wint_t) a[ptr_a]))
+			if (!iswpunct((wint_t) as[ptr_a]) &&
+                            !iswspace((wint_t) as[ptr_a]))
 				return GREATER_THAN;
 	if (ptr_a == len_a && ptr_b < len_b)
 		for (; ptr_b < len_b; ptr_b++)
-			if (!iswpunct((wint_t) b[ptr_b]) && !iswspace((wint_t) b[ptr_b]))
+			if (!iswpunct((wint_t) bs[ptr_b]) &&
+                            !iswspace((wint_t) bs[ptr_b]))
 				return LESS_THAN;
 
 	return EQUAL;

@@ -6,22 +6,23 @@
 #define LEFT(x) ((x) * 2 + 1)
 #define RIGHT(x) ((x) * 2 + 2)
 
-static void swap(wchar_t **a, wchar_t **b);
+static void swap(wstr_t *a, wstr_t *b);
 
 void
-sort(wchar_t **lines, size_t len, comp_t comp)
+sort(list_t *l, comp_t comp)
 {
-	assert(lines);
-	assert(comp);
+	assert(l);
+	assert(l->buf);
+	assert(l->cap >= l->len);
 
-	size_t start = len / 2;
-	size_t end = len;
+	size_t start = l->len / 2;
+	size_t end = l->len;
 	while (end > 1) {
 		if (start > 0) {
 			start--;
 		} else {
 			end--;
-			swap(&lines[end], &lines[0]);
+			swap(&L(l)[end], &L(l)[0]);
 		}
 
 		size_t root = start;
@@ -29,7 +30,7 @@ sort(wchar_t **lines, size_t len, comp_t comp)
 		while (LEFT(root) < end && !end_loop) {
 			size_t child = LEFT(root);
 			if (child + 1 < end) {
-				switch (comp(lines[child], lines[child + 1])) {
+				switch (comp(L(l)[child], L(l)[child + 1])) {
 				case LESS_THAN:
 					child++;
 				case EQUAL:
@@ -40,9 +41,9 @@ sort(wchar_t **lines, size_t len, comp_t comp)
 				}
 			}
 
-			switch (comp(lines[root], lines[child])) {
+			switch (comp(L(l)[root], L(l)[child])) {
 			case LESS_THAN:
-				swap(&lines[root], &lines[child]);
+				swap(&L(l)[root], &L(l)[child]);
 				root = child;
 				break;
 			case EQUAL:
@@ -57,12 +58,12 @@ sort(wchar_t **lines, size_t len, comp_t comp)
 }
 
 static void
-swap(wchar_t **a, wchar_t **b)
+swap(wstr_t *a, wstr_t *b)
 {
 	assert(a);
 	assert(b);
 
-	wchar_t *t = *a;
+	wstr_t t = *a;
 	*a = *b;
 	*b = t;
 }
