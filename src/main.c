@@ -76,15 +76,7 @@ main(int argc, char *argv[])
 		}
 
 		arena_restore(a, p);
-		if (!arena_alloc(a, len * sizeof(wchar_t))) {
-			list_free(l);
-			arena_free(a);
-			fclose(f);
-			fwprintf(stderr, L"[ERR] Allocation error\n");
-			return 1;
-		}
-
-		if (list_append(l, line, len)) {
+		if (!arena_alloc(a, len * sizeof(wchar_t)) || list_append(l, line, len)) {
 			list_free(l);
 			arena_free(a);
 			fclose(f);
